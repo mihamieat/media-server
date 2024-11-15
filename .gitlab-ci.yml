@@ -1,3 +1,4 @@
+image: docker:latest
 stages:
   - build
   - lint
@@ -9,7 +10,7 @@ stages:
 build:
   stage: build
   script:
-    - docker-compose build
+    - docker compose build
 
 container_scanning:
   image:
