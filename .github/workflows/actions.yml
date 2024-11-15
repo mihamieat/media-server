@@ -86,6 +86,10 @@ jobs:
           sudo chown -R 755 jellyfin/config
           docker compose run --rm jellyfin test -d
 
+      - name: Run Deluge Tests
+        run: |
+          docker compose run --rm deluge test -d
+
       - name: Run Jackett Tests
         run: |
           docker compose run --rm jackett test -d
