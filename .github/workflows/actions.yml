@@ -80,6 +80,8 @@ jobs:
 
       - name: Run Jellyfin Tests
         run: |
+          mkdir -p jellyfin/media
+          mkdir -p jellyfin/media2
           docker compose run --rm jellyfin test -d
 
       - name: Run Jackett Tests
