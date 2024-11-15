@@ -82,6 +82,8 @@ jobs:
         run: |
           mkdir -p jellyfin/media
           mkdir -p jellyfin/media2
+          sudo chown -R 1000:1000 jellyfin/config
+          sudo chown -R 755 jellyfin/config
           docker compose run --rm jellyfin test -d
 
       - name: Run Jackett Tests
