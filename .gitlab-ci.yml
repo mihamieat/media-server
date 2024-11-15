@@ -1,0 +1,71 @@
+stages:
+  - build
+  - lint
+  - analyze
+  - test
+  - verify
+  - cleanup
+
+build:
+  stage: build
+  script:
+    - docker-compose build
+
+container_scanning:
+  image:
+    name: docker.io/aquasec/trivy:latest
+    entrypoint: [""]
+  stage: analyze
+  variables:
+    GIT_STRATEGY: none
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_AUTH_URL: "$CI_REGISTRY"
+  script:
+    - trivy --version
+    # Cache cleanup to ensure fresh scan
+    - time trivy image --clear-cache
+
+    # Scan Jellyfin image
+    - time trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/contrib/gitlab.tpl" --output "$CI_PROJECT_DIR/jellyfin-scanning-report.json" jellyfin/jellyfin:latest
+
+    # Scan Deluge image
+    - time trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/contrib/gitlab.tpl" --output "$CI_PROJECT_DIR/deluge-scanning-report.json" lscr.io/linuxserver/deluge:latest
+
+    # Scan Jackett image
+    - time trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/contrib/gitlab.tpl" --output "$CI_PROJECT_DIR/jackett-scanning-report.json" linuxserver/jackett:latest
+
+    # Fail on critical vulnerabilities for all images
+    - time trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress jellyfin/jellyfin:latest
+    - time trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress lscr.io/linuxserver/deluge:latest
+    - time trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress linuxserver/jackett:latest
+
+  cache:
+    paths:
+      - .trivycache/
+  artifacts:
+    when: always
+    reports:
+      container_scanning:
+        - "$CI_PROJECT_DIR/jellyfin-scanning-report.json"
+        - "$CI_PROJECT_DIR/deluge-scanning-report.json"
+        - "$CI_PROJECT_DIR/jackett-scanning-report.json"
+  tags:
+    - docker-runner
+
+test:
+  stage: test
+  script:
+    - docker compose run --rm jellyfin test -d
+    - docker compose run --rm jackett test -d
+
+verify:
+  stage: verify
+  script:
+    - docker-compose ps
+    - curl -f http://localhost:8096
+
+cleanup:
+  stage: cleanup
+  script:
+    - docker-compose down --volumes --remove-orphans
