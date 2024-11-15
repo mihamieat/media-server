@@ -26,6 +26,7 @@ services:
     volumes:
       - './deluge/config:/config'
       - './jellyfin/media:/downloads'
+      - './torrents:/torrents'
     ports:
       - '8112:8112'
       - '6881:6881'
@@ -39,7 +40,7 @@ services:
       - '9117:9117'
     volumes:
       - './jackett/config:/config'
-      - './downloads:/downloads'
+      - './torrents:/downloads'
     env_file:
       - .env
     restart: unless-stopped

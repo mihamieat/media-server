@@ -39,9 +39,13 @@ access to deluge interface to your server url and port `8112`
 
 default deluge password is `deluge`. it is advised to change it.
 
+You will need to declare a folder on the container side (/torrents) to "watch" for torrents that come from Jackett (Settings > Autoadd plugin).
+
 ### jackett
 
 access to jacket interface to your server url and port `9117`
+
+it must be configured from the dashboard so that the "blackhole" field contains the name of the folder that corresponds to the volume declared in the Docker Compose file (/torrents).
 
 ## stop the services
 
