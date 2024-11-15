@@ -56,9 +56,9 @@ jobs:
             jellyfin/jellyfin:latest
             lscr.io/linuxserver/deluge:latest
             linuxserver/jackett:latest
-          format: 'json'
-          output: 'trivy-report.json'
-          severity: 'HIGH,CRITICAL'
+          format: "json"
+          output: "trivy-report.json"
+          severity: "HIGH,CRITICAL"
 
       # Upload the Trivy report as an artifact
       - name: Upload Trivy scan report
