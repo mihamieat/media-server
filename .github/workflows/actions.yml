@@ -74,6 +74,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: create .env file
+        run: |
+          echo "JELLYFIN_PublishedServerUrl=http://127.0.0.1:8096\nPUID=1000\nPGID=1000\nTZ=Europe/Paris\nDELUGE_LOGLEVEL=error" > .env
+
       - name: Run Jellyfin Tests
         run: |
           docker compose run --rm jellyfin test -d
