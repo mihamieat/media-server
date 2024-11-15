@@ -83,7 +83,7 @@ jobs:
           mkdir -p jellyfin/media
           mkdir -p jellyfin/media2
           mkdir -p jellyfin/config
-          sudo chown -R 1000:1000 jellyfin/config
+          sudo chown -R $USER:$USER ./jellyfin/config
           sudo chown -R 755 jellyfin/config
           docker compose run --rm jellyfin test -d
 
