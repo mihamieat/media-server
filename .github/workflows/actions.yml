@@ -1,0 +1,109 @@
+name: Docker CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - feature/*
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+      - feature/*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker images
+        run: |
+          docker compose -f docker-compose.yml build
+
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker images
+        run: |
+          docker compose -f docker-compose.yml build
+
+      - name: Scan Docker images with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: |
+            jellyfin/jellyfin:latest
+            lscr.io/linuxserver/deluge:latest
+            linuxserver/jackett:latest
+          format: 'json'
+          output: 'trivy-report.json'
+          severity: 'HIGH,CRITICAL'
+
+      # Upload the Trivy report as an artifact
+      - name: Upload Trivy scan report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-report
+          path: trivy-report.json
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Jellyfin Tests
+        run: |
+          docker compose run --rm jellyfin test -d
+
+      - name: Run Jackett Tests
+        run: |
+          docker compose run --rm jackett test -d
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Verify Docker containers are running
+        run: |
+          docker compose ps
+
+      - name: Curl Jellyfin web interface
+        run: |
+          curl -f http://localhost:8096
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Clean up Docker containers
+        run: |
+          docker compose down --volumes --remove-orphans
