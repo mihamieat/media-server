@@ -24,7 +24,7 @@ the application needs to have a `.env` file. create it and set the following men
 ### docker compose 🐳
 
 ```sh
-docker compose up -d
+./run.sh
 ```
 
 ## run 🚀
@@ -42,3 +42,9 @@ default deluge password is `deluge`. it is advised to change it.
 ### jackett
 
 access to jacket interface to your server url and port `9117`
+
+## stop the services
+
+```sh
+./stop.sh
+```
